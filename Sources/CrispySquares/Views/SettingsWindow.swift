@@ -24,8 +24,7 @@ struct SettingsWindow: View {
     private var detailView: some View {
         switch selectedItem {
         case .fontSmoothing:
-            Text("Font Smoothing — coming in Task 9")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            FontSmoothingView()
         case .gammaColor:
             Text("Gamma & Color — coming in Task 11")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
