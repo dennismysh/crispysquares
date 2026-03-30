@@ -8,7 +8,7 @@ struct CrispySquaresApp: App {
     @StateObject private var fontSmoothingService = FontSmoothingService()
     @StateObject private var appState = AppState()
 
-    private let configStore = ConfigStore()
+    // TODO: Wire ConfigStore for persistence (tracked as follow-up)
 
     var body: some Scene {
         MenuBarExtra("CrispySquares", systemImage: "display") {

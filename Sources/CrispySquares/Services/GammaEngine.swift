@@ -71,7 +71,7 @@ final class GammaEngine: ObservableObject {
 
     func cancelPreview(on displayID: CGDirectDisplayID) {
         isLivePreviewing = false
-        resetDisplay(displayID)
+        resetDisplay()
     }
 
     // MARK: - Saved Settings & Wake
@@ -100,7 +100,7 @@ final class GammaEngine: ObservableObject {
 
     // MARK: - Reset
 
-    func resetDisplay(_ displayID: CGDirectDisplayID) {
+    func resetDisplay() {
         CGDisplayRestoreColorSyncSettings()
     }
 
@@ -123,10 +123,54 @@ final class GammaEngine: ObservableObject {
     }
 
     func assignProfile(at url: URL, to displayID: CGDirectDisplayID) -> Bool {
-        // ColorSync profile assignment — may need framework linking adjustments
-        // For now, return false as a stub; the profile is saved to disk and
-        // macOS will pick it up from ~/Library/ColorSync/Profiles/
-        return false
+        guard let data = try? Data(contentsOf: url) else { return false }
+        // Parse the curve tag from the ICC profile and apply as gamma table
+        // For CrispySquares-generated profiles, we can extract the rTRC curve
+        guard let table = extractCurveFromICC(data) else { return false }
+        table.withUnsafeBufferPointer { buffer in
+            guard let ptr = buffer.baseAddress else { return }
+            CGSetDisplayTransferByTable(displayID, UInt32(table.count), ptr, ptr, ptr)
+        }
+        return true
+    }
+
+    private func extractCurveFromICC(_ data: Data) -> [Float]? {
+        // Find 'rTRC' tag in the ICC profile
+        guard data.count > 132 else { return nil }
+        let tagCount = readUInt32(data, offset: 128)
+        for i in 0..<Int(tagCount) {
+            let tagOffset = 132 + i * 12
+            guard tagOffset + 12 <= data.count else { return nil }
+            let sig = String(data: data[tagOffset..<(tagOffset + 4)], encoding: .ascii)
+            if sig == "rTRC" {
+                let dataOffset = Int(readUInt32(data, offset: tagOffset + 4))
+                let dataSize = Int(readUInt32(data, offset: tagOffset + 8))
+                guard dataOffset + dataSize <= data.count else { return nil }
+                // Parse 'curv' tag type
+                let typeSig = String(data: data[dataOffset..<(dataOffset + 4)], encoding: .ascii)
+                guard typeSig == "curv" else { return nil }
+                let curveCount = Int(readUInt32(data, offset: dataOffset + 8))
+                var table = [Float]()
+                for j in 0..<curveCount {
+                    let valueOffset = dataOffset + 12 + j * 2
+                    guard valueOffset + 2 <= data.count else { return nil }
+                    let uint16Val = readUInt16(data, offset: valueOffset)
+                    table.append(Float(uint16Val) / 65535.0)
+                }
+                return table
+            }
+        }
+        return nil
+    }
+
+    private func readUInt32(_ data: Data, offset: Int) -> UInt32 {
+        let bytes = data[offset..<(offset + 4)]
+        return bytes.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+    }
+
+    private func readUInt16(_ data: Data, offset: Int) -> UInt16 {
+        let bytes = data[offset..<(offset + 2)]
+        return bytes.withUnsafeBytes { $0.load(as: UInt16.self).bigEndian }
     }
 
     // MARK: - ICC Binary Construction

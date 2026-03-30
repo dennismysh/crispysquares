@@ -6,7 +6,6 @@ import CoreGraphics
 final class DisplayManager: ObservableObject {
     @Published var displays: [DisplayInfo] = []
     @Published var selectedDisplayID: CGDirectDisplayID?
-    var onDisplayReconfiguration: (() -> Void)?
 
     private var reconfigurationToken: AnyObject?
 
@@ -52,7 +51,6 @@ final class DisplayManager: ObservableObject {
             guard let manager = userInfo.map({ Unmanaged<DisplayManager>.fromOpaque($0).takeUnretainedValue() }) else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 manager.refreshDisplays()
-                manager.onDisplayReconfiguration?()
             }
         }, Unmanaged.passUnretained(self).toOpaque())
     }

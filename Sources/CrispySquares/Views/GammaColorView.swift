@@ -16,6 +16,7 @@ struct GammaColorView: View {
     @State private var isPreviewing = false
     @State private var showingKeepDialog = false
     @State private var keepCountdown = 15
+    @State private var revertTimer: Timer?
 
     private var currentCurve: GammaCurve {
         .parametric(gamma: gamma, blackPoint: blackPoint, whitePoint: whitePoint, contrastBoost: contrastBoost)
@@ -73,8 +74,15 @@ struct GammaColorView: View {
         .onChange(of: blackPoint) { _ in updateLivePreview() }
         .onChange(of: whitePoint) { _ in updateLivePreview() }
         .alert("Keep Display Settings?", isPresented: $showingKeepDialog) {
-            Button("Keep") { }
-            Button("Revert", role: .cancel) { resetDisplay() }
+            Button("Keep") {
+                revertTimer?.invalidate()
+                revertTimer = nil
+            }
+            Button("Revert", role: .cancel) {
+                revertTimer?.invalidate()
+                revertTimer = nil
+                resetDisplay()
+            }
         } message: {
             Text("Reverting in \(keepCountdown) seconds if not confirmed...")
         }
@@ -91,10 +99,12 @@ struct GammaColorView: View {
         gammaEngine.applyGammaTable(curve: currentCurve, to: displayID)
         keepCountdown = 15
         showingKeepDialog = true
-        Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
+        revertTimer?.invalidate()
+        revertTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [self] _ in
             keepCountdown -= 1
             if keepCountdown <= 0 {
-                timer.invalidate()
+                revertTimer?.invalidate()
+                revertTimer = nil
                 if showingKeepDialog {
                     showingKeepDialog = false
                     resetDisplay()
