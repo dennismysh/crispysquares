@@ -26,8 +26,7 @@ struct SettingsWindow: View {
         case .fontSmoothing:
             FontSmoothingView()
         case .gammaColor:
-            Text("Gamma & Color — coming in Task 11")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            GammaColorView()
         case .iccProfiles:
             Text("ICC Profiles — coming in Task 12")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
