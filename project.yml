@@ -1,0 +1,40 @@
+name: CrispySquares
+options:
+  bundleIdPrefix: com.crispysquares
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+targets:
+  CrispySquares:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/CrispySquares
+    info:
+      path: Sources/CrispySquares/Info.plist
+      properties:
+        LSUIElement: true
+        CFBundleDisplayName: CrispySquares
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.crispysquares.app
+        MACOSX_DEPLOYMENT_TARGET: "13.0"
+        SWIFT_VERSION: "5.9"
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+    scheme:
+      testTargets:
+        - CrispySquaresTests
+  CrispySquaresTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/CrispySquaresTests
+    dependencies:
+      - target: CrispySquares
+    settings:
+      base:
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/CrispySquares.app/Contents/MacOS/CrispySquares"
+        GENERATE_INFOPLIST_FILE: YES
