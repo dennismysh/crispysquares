@@ -28,8 +28,7 @@ struct SettingsWindow: View {
         case .gammaColor:
             GammaColorView()
         case .iccProfiles:
-            Text("ICC Profiles — coming in Task 12")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ICCProfilesView()
         case .hidpiScaling:
             VStack(spacing: 12) {
                 Image(systemName: "rectangle.on.rectangle").font(.system(size: 48)).foregroundStyle(.tertiary)
