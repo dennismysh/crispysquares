@@ -12,28 +12,9 @@ struct CrispySquaresApp: App {
 
     var body: some Scene {
         MenuBarExtra("CrispySquares", systemImage: "display") {
-            Button("Open Settings...") {
-                openSettings()
-            }
-            .keyboardShortcut(",")
-
-            Divider()
-
-            Toggle("Launch at Login", isOn: $appState.launchAtLogin)
-
-            Divider()
-
-            Button("Reset All Displays") {
-                gammaEngine.resetAllDisplays()
-            }
-            .keyboardShortcut("r", modifiers: [.command, .shift])
-
-            Divider()
-
-            Button("Quit") {
-                NSApplication.shared.terminate(nil)
-            }
-            .keyboardShortcut("q")
+            SettingsMenuContent()
+                .environmentObject(gammaEngine)
+                .environmentObject(appState)
         }
 
         Window("CrispySquares", id: "settings") {
@@ -45,15 +26,37 @@ struct CrispySquaresApp: App {
         }
         .defaultSize(width: 800, height: 550)
     }
+}
 
-    private func openSettings() {
-        NSApp.activate(ignoringOtherApps: true)
-        for window in NSApp.windows {
-            if window.title == "CrispySquares" || window.identifier?.rawValue == "settings" {
-                window.makeKeyAndOrderFront(nil)
-                return
-            }
+struct SettingsMenuContent: View {
+    @Environment(\.openWindow) private var openWindow
+    @EnvironmentObject var gammaEngine: GammaEngine
+    @EnvironmentObject var appState: AppState
+
+    var body: some View {
+        Button("Open Settings...") {
+            openWindow(id: "settings")
+            NSApp.activate(ignoringOtherApps: true)
         }
+        .keyboardShortcut(",")
+
+        Divider()
+
+        Toggle("Launch at Login", isOn: $appState.launchAtLogin)
+
+        Divider()
+
+        Button("Reset All Displays") {
+            gammaEngine.resetAllDisplays()
+        }
+        .keyboardShortcut("r", modifiers: [.command, .shift])
+
+        Divider()
+
+        Button("Quit") {
+            NSApplication.shared.terminate(nil)
+        }
+        .keyboardShortcut("q")
     }
 }
 
